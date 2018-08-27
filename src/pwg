@@ -1,0 +1,318 @@
+#!/bin/sh
+#
+# Copyright (c) 2015-2018 David Dahlberg <dyn+code@dahlberg.cologne>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# ASCIIbet
+# Includes all printable characters
+ascii_chars=" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_\`abcdefghijklmnopqrstuvwxyz{|}~"
+ascii_name="Printable ASCII characters"
+
+# Common alphabets
+alnum_chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+alnum_name="Alphanumeric Characters"
+lower_chars="abcdefghijklmnopqrstuvwxyz"
+lower_name="Lower-case characters"
+upper_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+upper_name="Upper-case characters"
+hex_chars="0123456789abcdef"
+hex_name="Hexadecimal numbers"
+num_chars="0123456789"
+num_name="Numbers"
+base64_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+base64_name="Characters from base64 encoding"
+base64url_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+base64url_name="Characters from base64url encoding"
+base32_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+base32_name="Characters from base32 encoding"
+base32hex_chars="0123456789ABCDEFGHIJKLMNOPQRSTUV"
+base32hex_name="Characters from base32hex encoding"
+base16_chars="0123456789ABCDEF"
+base16_name="Characters from base16 encoding"
+uue_chars=" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_"
+uue_name="UUencode characters"
+bin_chars="01"
+bin_name="Binary numbers"
+
+# Pastable charset
+# Password is recognized as "one word" when marking.
+word_chars="#%&+,-./0123456789=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\_abcdefghijklmnopqrstuvwxyz~"
+word_name="Selectable as one word"
+
+# Distinguishable charset
+# Exclude similar looking characters 
+distinguish_chars="!\"#$%&()*+,-./23456789:;<=>?@ABCDEFGHJKLMNPRSTUVWXYZ[\]_abcdefghijkmnopqrstuvwxyz{}~"
+distinguish_name="Visibly distinguishable characters"
+
+simple_chars="23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+simple_name="Simple character set"
+
+# Pastable and Distinguishable
+distword_chars="#%&+,-./23456789=?@ABCDEFGHJKLMNPRSTUVWXYZ\_abcdefghijkmnopqrstuvwxyz~"
+distword_name="Visibly distinguishable and selectable as one word"
+
+# Directly reachable characters on iphone
+#idirect_chars="abcdefghijklmnopqrstuvwxyzäöü"
+#idirect_name="Directly reachable on a iPhone soft keyboard"
+
+# Iphone characters, reachable via max 1 modifier
+iphone_chars="!\"&'(),-./0123456789;:?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+iphone_name="iPhone keyboard characters"
+iword_chars="&,-./0123456789?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+word_name="iPhone keyboard characters (selectable as one word)"
+
+default_chars="$distword_chars"
+default_name="$distword_name"
+
+# Search base for word lists
+wdir="/usr/local/share/pwg $(dirname $0)/wordlists ./contrib"
+
+usage () {
+        echo "usage: $(basename $0) [options]"
+        echo "options: -A alphabet: use custom alphabet"
+	echo "         -a alphabet: use predefined alphabet (see man page)"
+        echo "         -e entropy: bits of entropy"
+        echo "         -h: help"
+        echo "         -l length: number of symbols (characters/words)"
+        echo "         -n number: number of passwords to generate"
+        echo "         -v: verbose"
+}
+
+alpha_chars="$default_chars"
+alpha_name="$default_name"
+alpha_type=charset
+
+while getopts "A:a:e:hl:n:v" opt; do
+        case "$opt" in
+        A)
+		alpha_chars="$OPTARG"
+	 	alpha_type="charset"
+		alpha_name="Custom"
+                ;;
+        a)
+		unset wordlist
+		case "$OPTARG" in
+		dice)
+			for dir in $wdir; do
+				if [ -f "$dir/diceware.wordlist.asc" ]; then
+					alpha_name="Diceware wordlist"
+					alpha_type="dice"
+					dice=5
+					wordlist="$dir/diceware.wordlist.asc"
+					break
+				fi
+			done
+			;;
+		eff)
+			for dir in $wdir; do
+				if [ -f "$dir/eff_large_wordlist.txt" ]; then
+					alpha_name="EFF's long word list"
+					alpha_type="dice"
+					dice=5
+					wordlist="$dir/eff_large_wordlist.txt"
+					break
+				fi
+			done
+			;;
+		eff_short1)
+			for dir in $wdir; do
+				if [ -f "$dir/eff_short_wordlist_1.txt" ]; then
+					alpha_name="EFF's general short word list"
+					alpha_type="dice"
+					dice=4
+					wordlist="$dir/eff_short_wordlist_1.txt"
+					break
+				fi
+			done
+			;;
+		eff_short2)
+			for dir in $wdir; do
+				if [ -f "$dir/eff_short_wordlist_2_0.txt" ]; then
+					alpha_name="EFF's short word list"
+					alpha_type="dice"
+					wordlist="$dir/eff_short_wordlist_2_0.txt"
+					dice=4
+					break
+				fi
+			done
+			;;
+		pgp)
+			for dir in $wdir; do
+				if [ -f "$dir/pgp.wordlist.txt" ]; then
+					alpha_name="PGP word list"
+					alpha_type="pgp"
+					wordlist="$dir/pgp.wordlist.txt"
+					break
+				fi
+			done
+			;;
+		skey)
+			for dir in $wdir; do
+				if [ -f "$dir/put.c" ]; then
+					alpha_name="S/KEY wordlist"
+					alpha_type="skey"
+					wordlist="$dir/put.c"
+					break
+				fi
+			done
+			;;
+		*)
+			eval alpha_chars="\$${OPTARG}_chars"
+			eval alpha_name="\$${OPTARG}_name"
+	 		alpha_type="charset"
+			if [ -z "$alpha_chars" ]; then
+				echo "$(basename $0): unknown alphabeth \"$OPTARG\"" >&2
+				exit 1
+			fi
+			;;
+		esac
+                ;;
+        e)
+                entropy="$OPTARG"
+		;;
+        h|\?)
+                usage
+                exit 1
+                ;;
+        l)
+                len="$OPTARG"
+		;;
+	n)
+		no="$OPTARG"
+		;;
+        v)
+                v=true
+                ;;
+        --)
+		echo ende
+                break
+                ;;
+        esac
+done
+
+# Calculate required entropy
+if [ -z "$entropy" ] && [ -z "$len" ]; then
+	# Default security (power of two) 
+	# BSI: 100, CNSA: 112
+	entropy=112
+elif [ "$entropy" ] && [ "$len" ]; then
+	echo "please select only one of entropy '-e' and length '-l'" >&2
+	exit 1
+else
+	# only one parameter set, which is okay 
+	true
+fi
+
+# Now start
+if [ "$wordlist" ]; then
+	case "$alpha_type" in
+	dice)
+		card=$( echo "6^$dice" | bc -l )
+		;;
+	pgp)
+		card=256
+		;;
+	skey)
+		card=2048
+		;;
+	*)
+		echo "unknown wordlist $wordlist">&2
+		exit 1
+		;;
+	esac
+elif [  "$alpha_type" = charset ] && [ "$alpha_name" = Custom ]; then
+	# Check freely chosen alphabets for uniqueness
+	beta_chars="$alpha_chars"
+	unset alpha_chars
+	while [ "$beta_chars" ]; do
+		char=$(printf "%s" "$beta_chars" | cut -c 1)
+		alpha_chars="$alpha_chars$char"
+		beta_chars=$(printf "%s" "$beta_chars" | tr -d "$char") 
+	done
+fi
+
+# Calculate required symbols
+[ $card ] || card=$(printf "%s" "$alpha_chars" | wc -c | sed 's/^[[:blank:]]*//' )
+[ $len ]  || len=$(( $(echo "l(2 ^ $entropy)/l($card)" | bc -l | cut -d. -f1) + 1))
+pwentr=$(echo "l( $card ^ $len ) / l(2)" | bc -l | cut -d. -f1)
+no=${no:-1}
+
+if [ $v ]; then
+	[ "$alpha_name" ] && printf "Alphabet:       %s\n" "$alpha_name"
+	if [ "$alpha_type" = charset ]; then
+		printf "Charset:        %s\n" "$alpha_chars"
+	fi
+	printf "Cardinality:    %d\n" "$card"
+	[ "$entropy" ] && printf "Entropy target: %s bits\n" "$entropy"
+	printf 'Pw. length:     %d (%s bits)\n' "$len" "$pwentr"
+fi
+
+# Generate password
+if [ $wordlist ]; then
+	unset pws
+	n=0
+	while [ $n -lt $no ]; do
+		unset pw
+		words=0
+		while [ "$words" -lt "$len" ]; do
+			case "$alpha_type" in
+			dice)
+				symbol=$(tr -cd 123456 < /dev/urandom | fold -w $dice | head -1)
+				word=$(grep "^$symbol[[:blank:]]" "$wordlist" | tr ' ' '\t' | cut -sf2)
+				;;
+			pgp)
+				symbol=$(tr -cd 0123456789ABCDEF < /dev/urandom | fold -w 2 | head -1)
+				word=$(grep "^$symbol[[:blank:]]" "$wordlist" \
+					| tr '\t' ' ' \
+					| sed 's/  */ /g' \
+					| cut -d ' ' -sf $((2+$words%2)) )
+				;;
+			skey)
+				# Cave: Only valid, because 2**16 % 2048 == 0
+				symbol=$(( $(od -An -N2 -tu2 /dev/urandom | sed 's/^[[:space:]0]*//') % 2048 ))
+				word=$(grep -E '^	"[A-Z", 	]*$' "$wordlist" \
+					| tr -cd '[:upper:],' \
+					| tr ',' '\t' \
+					| cut -f $(($symbol+1)) )
+				;;
+			*)
+				echo "unknown wordlist">&2
+				exit 1
+				;;
+			esac
+			pw="$pw $word"
+			words=$(($words+1))
+		done # generate password
+		pws=$(printf "%s\n%s" "$pws" "$pw")
+		n=$(($n+1))
+	done # generate n passwords
+	# tidy up
+	pws=$(printf "%s\n" "$pws" | sed -E -e '/^$/d' -e 's/[[:space:]]+/ /g' )
+else
+	pws=$(tr -cd "$alpha_chars" < /dev/urandom | fold -w $len | head -n $no)
+fi
+
+# Print result
+n=1
+printf "%s\n" "$pws" | while read pw; do
+	if [ "$no" -gt 1 ]; then
+		suffix=" $n:"
+	else
+		suffix=":"
+	fi
+	
+	[ $v ] && printf "Password%-8s" "$suffix"
+	printf "%s\n" "$pw"
+	n=$((n+1))
+done

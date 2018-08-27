@@ -1,0 +1,158 @@
+.\"$OpenBSD$
+.\"
+.\"Copyright (c) 2018 David Dahlberg <dyn+code@dahlberg.cologne>
+.\"
+.\"Permission to use, copy, modify, and distribute this software for any
+.\"purpose with or without fee is hereby granted, provided that the above
+.\"copyright notice and this permission notice appear in all copies.
+.\"
+.\"THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\"WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\"MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\"ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\"WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\"ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\"OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.Dd $Mdocdate: May 7 2018 $
+.Dt PWG 1
+.Os
+.Sh NAME
+.Nm pwg
+.Nd password generator
+.Sh SYNOPSIS
+.Nm
+.Op Fl A Ar custom alphabet
+.Op Fl a Ar predefined alphabet
+.Op Fl e Ar entropy
+.Op Fl l Ar length
+.Op Fl n Ar number
+.Op Fl v
+.Nm
+.Fl h
+.Sh DESCRIPTION
+.Nm
+generates passwords of a given strength from
+.Pa /dev/urandom .
+.Pp
+As opposed the other password generators, it is not required (but still
+possible) to specify password length.
+Instead,
+.Nm
+takes an alphabet and the required bits of entropy.
+The alphabeth is the set of symbols (i.e. letters or words),
+from which the password is constructed.
+The password length is automatically calculated from those values.
+.Pp
+The following options are available:
+.Bl -tag -width Ds
+.It Fl A Ar custom alphabet
+Define your own alphabet to pick characters from.
+.It Fl G Ar predefined alphabet
+Generate a new password from
+.Sx Predifined Alphabet .
+.It Fl e Ar bits of entropy
+Define the required bits of entropy.
+The default is 100, which suits the most recent recommentations of BSI, NIST
+and NSA.
+.It Fl l Ar length
+The generated password length.
+It is more useful to specify the required password quality with
+.Fl e
+instead.
+You can use
+.Fl vl
+to calculate the quality of a given password generation scheme.
+Only one of the options
+.Fl e
+and
+.Fl l
+may be used.
+.It Fl n Ar number
+Define the number of passwords to be generated.
+.It Fl h
+Display help.
+.It Fl v
+Display verbose output.
+.Pp
+This does include the display of the selected alphabet,
+the cardinality of the alphabet, the selected required
+entropy and the calculated required password length.
+.El
+.Ss Predefined Alphabet
+.Bl -tag -width Ds
+.It ascii
+Printable ASCII characters.
+.It alnum
+Alphanumeric characters.
+.It num
+Numerals.
+.It bin
+Binary numbers.
+.It hex
+Hexadecimal numbers.
+.It base64[url], base32[hex], base16
+RFC 4648 (The Base16, Base32 and Base64 Data Encodings") alphabets.
+.It simple
+Alphanumeric characters withouth easily confued ones,
+such asl I l and 1 or O and 0.
+.It distword
+Distinguishable characters without word boundaries.
+This is the default setting.
+.It iphone
+Characters which are reachable on an iPhone keyboard with a
+maximum of one modifier (Shift or NumLock).
+.It dice
+Diceware wordlist.
+.It eff
+EFF long wordlist.
+.It eff_short1
+EFF general short wordlist (four dice).
+.It eff_short2
+EFF short wordlist whith unique prefixes.
+.It skey
+S/KEY wordlist.
+.It pgp
+PGP biometric word list.
+.El
+.Sh FILES
+.Bl -tag -width Ds
+.It Pa /dev/urandom
+Used randomness source.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Generate a password:
+.Dl $ pwg
+.Pp
+Generate password with 128 bits of entropy from the custom charset '01':
+.Dl $ pwg -e 128 -A '01'
+.Sh SEE ALSO
+.Xr random 4
+.Sh STANDARDS
+.Rs
+.%A Vint Cerf
+.%D 16 October 1969
+.%R RFC 20
+.%T ASCII format for Network Interchange
+.Re
+.Pp
+.Rs
+.%A S. Josefsson
+.%D October 2006
+.%R RFC 4648
+.%T The Base16, Base32, and Base64 Data Encodings
+.Re
+.Pp
+.Rs
+.%A N. Haller
+.%D February 1995
+.%R RFC 1760
+.%T The S/KEY One-timePassword System
+.Re
+.Sh HISTORY
+The
+.Nm
+utility has been published in 2018.
+.Sh AUTHORS
+.An David Dahlberg Aq Mt dyn+code@dahlberg.cologne
