@@ -29,7 +29,7 @@ fetch:
 	$(fetch) contrib/eff_short_wordlist_2_0.txt \
 		https://www.eff.org/files/2016/09/08/eff_short_wordlist_2_0.txt
 	$(fetch) contrib/diceware.wordlist.asc \
-		https://world.std.com/~reinhold/diceware.wordlist.asc
+		https://theworld.com/~reinhold/diceware.wordlist.asc
 	$(fetch) contrib/put.c \
 		https://cvsweb.openbsd.org/cgi-bin/cvsweb/~checkout~/src/lib/libskey/put.c
 	$(fetch) contrib/pgp.wordlist.txt \
