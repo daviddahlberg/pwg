@@ -115,6 +115,10 @@ distword
 > Distinguishable characters without word boundaries.
 > This is the default setting.
 
+ende
+
+> Characters with same position on English and German keyboard layouts.
+
 iphone
 
 > Characters which are reachable on an iPhone keyboard with a
@@ -195,4 +199,4 @@ utility has been published in 2018.
 
 David Dahlberg &lt;[dyn+code@dahlberg.cologne](mailto:dyn+code@dahlberg.cologne)&gt;
 
-OpenBSD 6.4 - May 7, 2018
+OpenBSD 7.0 - May 7, 2018

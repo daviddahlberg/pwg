@@ -72,6 +72,12 @@ iphone_name="iPhone keyboard characters"
 iword_chars="&,-./0123456789?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 word_name="iPhone keyboard characters (selectable as one word)"
 
+# Characters, typable regardless, wheter keyboard layout is de or en
+# For situations, where layout is not clear or dissimilar to printed layout
+# (BIOS etc.)
+ende_chars="!$%&,.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
+ende_name="Characters with same keycodes in en/de keyboard layouts"
+
 default_chars="$distword_chars"
 default_name="$distword_name"
 
